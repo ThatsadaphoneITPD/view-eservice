@@ -4,6 +4,8 @@ import axios from 'axios';
 import React from 'react'
 import toast from 'react-hot-toast';
 import { Avatar, Text } from "rizzui";
+import { Announcement } from "rizzui";
+import GoogleMapShow from './displaymap';
 interface Props {
 
 }
@@ -16,7 +18,7 @@ interface Evcar {
     type_charger: string;
     charger_banner: string;
     charger_power: number;
-    charger_tou_peak_off: string;
+
 }
 interface Userinfo {
     first_name: string;
@@ -38,6 +40,7 @@ interface Interest {
     install_cost: string;
     intrest_install: string;
     reason_install: string;
+    charger_tou_peak_off: string;
 }
 interface FormattedDataItem {
     id: number;
@@ -47,6 +50,11 @@ interface FormattedDataItem {
     gps: Location;
     agree: Interest;
 }
+const containerStyle = {
+    width: '100%',
+    height: '400px',
+    borderRadius: '5px',
+};
 
 const envapi = process.env.NEXT_PUBLIC_API_BACKEND;
 const apiHttp = axios.create({ baseURL: envapi, headers: { "Content-type": "application/json", 'Content-Disposition': 'attachment; filename*=UTF-8\'\'', }, });
@@ -67,7 +75,6 @@ const formateStuctrue = (data: any): FormattedDataItem[] => {
             type_charger: item.type_charger,
             charger_banner: item.car_banner,
             charger_power: item.charger_power,
-            charger_tou_peak_off: item.charger_tou_peak_off,
         },
         address: {
             village: item.village,
@@ -83,97 +90,13 @@ const formateStuctrue = (data: any): FormattedDataItem[] => {
             install_cost: item.install_cost,
             intrest_install: item.intrest_install,
             reason_install: item.intrest_install,
+            charger_tou_peak_off: item.charger_tou_peak_off,
         },
     }));
     // console.log(formattedData)
     return formattedData;
 }
 
-const getColumns = (
-    order: string,
-    column: string,
-    onHeaderClick: (value: string) => any
-) => [
-        {
-            title: (
-                <HeaderCell
-                    title="Id"
-                    sortable
-                    ascending={order === "asc" && column === "id"}
-                />
-            ),
-            onHeaderCell: () => onHeaderClick("id"),
-            dataIndex: "id",
-            key: "id",
-            width: 50,
-        },
-        {
-            title: <HeaderCell title="EV User" />,
-            dataIndex: "user",
-            key: "user",
-            width: 250,
-            render: (user: any) => (
-                <div className="flex items-center">
-                    <div className="ml-3 rtl:ml-0 rtl:mr-3">
-                        <Text className="mb-0.5 !text-sm font-medium">
-                            {user?.first_name}
-                        </Text>
-                        <Text className="text-xs text-gray-400">
-                            {user?.last_name}
-                        </Text>
-                        <Text className="text-xs text-gray-400">
-                            {user?.meter_account}
-                        </Text>
-                    </div>
-                </div>
-            ),
-        },
-        {
-            title: <HeaderCell title="EV Car" />,
-            dataIndex: "car",
-            key: "car",
-            width: 320,
-            render: (car: any) => (
-                <div>
-                    <Text className="mb-0.5 !text-sm font-medium">
-                        {car?.car_banner}
-                    </Text>
-                    <Text as="p" className="text-xs text-gray-400">
-                        {car?.car_model}
-                    </Text>
-                </div>
-            ),
-        },
-        {
-            title: <></>,
-            dataIndex: "action",
-            key: "action",
-            width: 120,
-            render: (_: string, row: any) => (
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        className="text-primary underline"
-                        onClick={() => alert(`Edit item #${row.id}`)}
-                    >
-                        Edit
-                    </button>
-                    <button type="button" className="underline">
-                        View
-                    </button>
-                </div>
-            ),
-        },
-    ];
-const apiauth = async () => {
-    const userlogin = { "username": process.env.NEXT_PUBLIC_USER, "password": "%EvService@2024$" };
-    try {
-        const response = await apiHttp.post("/api_v1/auth/login", userlogin);
-        return response.data as any
-    } catch (error: any) {
-        return error.message as any
-    }
-}
 const apigetdata = async (auth: string) => {
     const config = {
         headers: {
@@ -192,6 +115,7 @@ export const RegisterEVList = (props: Props) => {
     const [order, setOrder] = React.useState<string>("desc");
     const [column, setColumn] = React.useState<string>("");
     const [data, setData] = React.useState<any>();
+
     React.useEffect(() => {
         const fetchData = async () => {
             try {
@@ -220,6 +144,132 @@ export const RegisterEVList = (props: Props) => {
             }
         },
     });
+    const getColumns = (
+        order: string,
+        column: string,
+        onHeaderClick: (value: string) => any
+    ) => [
+            {
+                title: (
+                    <HeaderCell
+                        title="Id"
+                        sortable
+                        ascending={order === "asc" && column === "id"}
+                    />
+                ),
+                onHeaderCell: () => onHeaderClick("id"),
+                dataIndex: "id",
+                key: "id",
+                width: 50,
+            },
+            {
+                title: <HeaderCell title="EV User" />,
+                dataIndex: "user",
+                key: "user",
+                width: 150,
+                render: (user: any) => (
+                    <div className="flex items-center">
+                        <div className="ml-3 rtl:ml-0 rtl:mr-3">
+                            <Text className="mb-0.5 !text-sm font-medium">
+                                {user?.first_name + " " + user?.last_name}
+                            </Text>
+                            <Text className="text-xs text-gray-400">
+                                {user?.meter_account}
+                            </Text>
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                title: <HeaderCell title="EV Car" />,
+                dataIndex: "car",
+                key: "car",
+                width: 150,
+                render: (car: any) => (
+                    <div>
+                        <Text className="mb-0.5 !text-sm font-medium">
+                            {car?.car_model + "." + car?.car_banner + ", " + car?.car_battery + " kWh"}
+                        </Text>
+                        <Text as="p" className="text-xs text-gray-400">
+                            {"ຫົວ " + car?.car_port + ", " + car?.charger_banner + " " + car?.type_charger}
+                        </Text>
+                    </div>
+                ),
+            },
+
+            {
+                title: <HeaderCell title="ຄວາມຕ້ອງການ" />,
+                dataIndex: "agree",
+                key: "agree",
+                width: 150,
+                render: (agree: any) => (
+                    <div>
+                        <Text className="mb-0.5 !text-sm font-medium">
+                            {agree?.charger_tou_peak_off + ", " + agree?.install_cost}
+                        </Text>
+                        <Text className="mb-0.5 !text-sm font-medium">
+                            {agree?.intrest_install}
+                        </Text>
+                    </div>
+                ),
+            },
+            {
+                title: <HeaderCell title="ທີ່ຢູ່" />,
+                dataIndex: "address",
+                key: "address",
+                width: 150,
+                render: (address: any) => (
+                    <div>
+                        <Text className="mb-0.5 !text-sm font-medium">
+                            {address?.village + ", " + address?.city}
+                        </Text>
+                        <Text className="mb-0.5 !text-sm font-medium">
+                            {address?.province}
+                        </Text>
+                    </div>
+                ),
+            },
+            {
+                title: <HeaderCell title="ພິກັດ" />,
+                dataIndex: "gps",
+                key: "gps",
+                width: 150,
+                render: (gps: any) => (
+                    <GoogleMapShow lat={gps?.latitude} lng={gps?.longitude} />
+                    // <Text > {gps ? `${gps.latitude}, ${gps.longitude}` : 'No GPS data available'}</Text>
+                )
+            },
+
+            {
+                title: <></>,
+                dataIndex: "action",
+                key: "action",
+                width: 120,
+                render: (_: string, row: any) => (
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            className="text-primary underline"
+                            onClick={() => alert(`Edit item #${row.id}`)}
+                        >
+                            Edit
+                        </button>
+                        <button type="button" className="underline">
+                            View
+                        </button>
+                    </div>
+                ),
+            },
+        ];
+    const apiauth = async () => {
+        const userlogin = { "username": process.env.NEXT_PUBLIC_USER, "password": "%EvService@2024$" };
+        try {
+            const response = await apiHttp.post("/api_v1/auth/login", userlogin);
+            return response.data as any
+        } catch (error: any) {
+            return error.message as any
+        }
+    }
     const columns: any = React.useMemo(
         () => getColumns(order, column, onHeaderClick),
         [order, column, onHeaderClick]
