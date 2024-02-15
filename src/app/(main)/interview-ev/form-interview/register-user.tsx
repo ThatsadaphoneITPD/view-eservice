@@ -166,7 +166,7 @@ const getColumns = (
         },
     ];
 const apiauth = async () => {
-    const userlogin = { "username": "ev-edl-service", "password": "%EvService@2024$" };
+    const userlogin = { "username": process.env.NEXT_PUBLIC_USER, "password": "%EvService@2024$" };
     try {
         const response = await apiHttp.post("/api_v1/auth/login", userlogin);
         return response.data as any
