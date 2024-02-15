@@ -1,0 +1,5 @@
+export { default as ACGBT } from "@public/ACGBT.svg"
+export { default as DCGBT } from "@public/DCGBT.svg"
+export { default as ACCCS2 } from "@public/ACCCS2.svg"
+export { default as DCCCS2 } from "@public/DCCCS2.svg"
+export { default as INVOICE } from "@public/Invioce.svg"
