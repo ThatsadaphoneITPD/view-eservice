@@ -4,7 +4,6 @@ import axios from 'axios';
 import React from 'react'
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { MdDelete } from "react-icons/md";
 import { Avatar, Button, Text } from "rizzui";
 import GoogleMapShow from './displaymap';
 interface Props {
