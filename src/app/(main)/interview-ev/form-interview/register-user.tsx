@@ -96,7 +96,16 @@ const formateStuctrue = (data: any): FormattedDataItem[] => {
     // console.log(formattedData)
     return formattedData;
 }
-
+const apiauth = async () => {
+    const userlogin = { "username": "ev-edl-service", "password": "%EvService@2024$" };
+    try {
+        const response = await apiHttp.post("/api_v1/evregister-svc/auth/login", userlogin);
+        return response.data as any
+    } catch (error: any) {
+        console.log(error.message)
+        return error.message as any
+    }
+}
 const apigetdata = async (auth: string) => {
     const config = {
         headers: {
@@ -104,7 +113,7 @@ const apigetdata = async (auth: string) => {
         },
     };
     try {
-        const response = await apiHttp.get("/api_v1/evRegister/get", config);
+        const response = await apiHttp.get("/api_v1/evregister-svc/evRegister/get", config);
         return response.data as any
     } catch (error: any) {
         return error.message as any
@@ -125,8 +134,8 @@ export const RegisterEVList = (props: Props) => {
                 toast.success('ສຳເລັດເອົາຂໍ້ມູນ!')
                 setData(formattedData)
             } catch (error: any) {
-                toast.error('ບໍ່ສຳເລັດ!')
-                console.error("Error fetching data:", error);
+                toast.error('ບໍ່ສຳເລັດ!' + error.message)
+
             }
         };
         fetchData();
@@ -261,19 +270,11 @@ export const RegisterEVList = (props: Props) => {
                 ),
             },
         ];
-    const apiauth = async () => {
-        const userlogin = { "username": process.env.NEXT_PUBLIC_USER, "password": "%EvService@2024$" };
-        try {
-            const response = await apiHttp.post("/api_v1/auth/login", userlogin);
-            return response.data as any
-        } catch (error: any) {
-            return error.message as any
-        }
-    }
+
     const columns: any = React.useMemo(
         () => getColumns(order, column, onHeaderClick),
         [order, column, onHeaderClick]
     );
 
-    return <Table data={data} columns={columns} className="text-sm" />;
+    return <Table data={data} columns={columns} className="text-sm h-full" />;
 }
