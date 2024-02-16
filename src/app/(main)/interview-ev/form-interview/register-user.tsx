@@ -3,8 +3,9 @@ import Table, { HeaderCell } from '@/components/ui/table';
 import axios from 'axios';
 import React from 'react'
 import toast from 'react-hot-toast';
-import { Avatar, Text } from "rizzui";
-import { Announcement } from "rizzui";
+import * as XLSX from 'xlsx';
+import { MdDelete } from "react-icons/md";
+import { Avatar, Button, Text } from "rizzui";
 import GoogleMapShow from './displaymap';
 interface Props {
 
@@ -50,18 +51,40 @@ interface FormattedDataItem {
     gps: Location;
     agree: Interest;
 }
-const containerStyle = {
-    width: '100%',
-    height: '400px',
-    borderRadius: '5px',
-};
+interface FormattedExport {
+    id: number;
+    first_name: string,
+    last_name: string,
+    meter_account: string,
+    phone_number: string,
+    car_banner: string,
+    car_battery: string,
+    car_model: string,
+    car_port: string,
+    type_charger: string,
+    charger_banner: string,
+    charger_power: string,
+    village: string,
+    city: string,
+    province: string,
+    latitude: string,
+    longitude: string,
+    electic_bill_policy: string,
+    install_cost: string,
+    intrest_install: string,
+    reason_install: string,
+    charger_tou_peak_off: string,
+}
+
 
 const envapi = process.env.NEXT_PUBLIC_API_BACKEND;
 const apiHttp = axios.create({ baseURL: envapi, headers: { "Content-type": "application/json", 'Content-Disposition': 'attachment; filename*=UTF-8\'\'', }, });
 const formateStuctrue = (data: any): FormattedDataItem[] => {
     const formattedData: FormattedDataItem[] = data?.map((item: any, index: number) => ({
         id: index + 1,
+        code_id: item.id,
         user: {
+            avatar: index + 1,
             first_name: item.first_name,
             last_name: item.last_name,
             meter_account: item.meter_account,
@@ -96,6 +119,31 @@ const formateStuctrue = (data: any): FormattedDataItem[] => {
     // console.log(formattedData)
     return formattedData;
 }
+const formateExcel = (data: any): FormattedExport[] => {
+    const formattedData: FormattedExport[] = data?.map((item: any, index: number) => ({
+        id: index + 1,
+        first_name: item.first_name,
+        last_name: item.last_name,
+        meter_account: item.meter_account,
+        phone_number: item.phone_number,
+        car_banner: item.car_banner,
+        car_battery: item.car_battery,
+        car_model: item.car_model,
+        car_port: item.car_port,
+        type_charger: item.type_charger,
+        charger_banner: item.car_banner,
+        charger_power: item.charger_power,
+        village: item.village,
+        city: item.city,
+        province: item.province,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        install_cost: item.install_cost,
+        charger_tou_peak_off: item.charger_tou_peak_off,
+        intrest_install: item.intrest_install,
+    }));
+    return formattedData;
+}
 const apiauth = async () => {
     const userlogin = { "username": "ev-edl-service", "password": "%EvService@2024$" };
     try {
@@ -118,26 +166,37 @@ const apigetdata = async (auth: string) => {
     } catch (error: any) {
         return error.message as any
     }
-
 }
+const exportToExcel = async () => {
+    const responseData = await apiauth();
+    const getEVuser = await apigetdata(responseData.data.access_token)
+    const getCleanData = formateExcel(getEVuser.data)
+    const dataArray = getCleanData.map((item: any) => Object.values(item));
+    const columns = Object.keys(getCleanData[0]);
+    dataArray.unshift(columns);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(dataArray);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, `EVCarUser.xlsx`);
+};
+
 export const RegisterEVList = (props: Props) => {
     const [order, setOrder] = React.useState<string>("desc");
     const [column, setColumn] = React.useState<string>("");
     const [data, setData] = React.useState<any>();
-
+    const fetchData = async () => {
+        try {
+            const responseData = await apiauth();
+            const getEVuser = await apigetdata(responseData.data.access_token)
+            // console.log(getEVuser.data)
+            const formattedData: FormattedDataItem[] = formateStuctrue(getEVuser.data);
+            toast.success('ສຳເລັດເອົາຂໍ້ມູນ!')
+            setData(formattedData)
+        } catch (error: any) {
+            toast.error('ບໍ່ສຳເລັດ!' + error.message)
+        }
+    };
     React.useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const responseData = await apiauth();
-                const getEVuser = await apigetdata(responseData.data.access_token)
-                const formattedData: FormattedDataItem[] = formateStuctrue(getEVuser.data);
-                toast.success('ສຳເລັດເອົາຂໍ້ມູນ!')
-                setData(formattedData)
-            } catch (error: any) {
-                toast.error('ບໍ່ສຳເລັດ!' + error.message)
-
-            }
-        };
         fetchData();
     }, []);
     const onHeaderClick = (value: string) => ({
@@ -175,15 +234,19 @@ export const RegisterEVList = (props: Props) => {
                 title: <HeaderCell title="EV User" />,
                 dataIndex: "user",
                 key: "user",
-                width: 150,
+                width: 250,
                 render: (user: any) => (
                     <div className="flex items-center">
+                        <Avatar name="John Doe" src={`https://randomuser.me/api/portraits/men/${user?.avatar}.jpg`} />
                         <div className="ml-3 rtl:ml-0 rtl:mr-3">
                             <Text className="mb-0.5 !text-sm font-medium">
                                 {user?.first_name + " " + user?.last_name}
                             </Text>
                             <Text className="text-xs text-gray-400">
                                 {user?.meter_account}
+                            </Text>
+                            <Text className="text-xs text-gray-400">
+                                {user?.phone_number}
                             </Text>
                         </div>
                     </div>
@@ -248,27 +311,23 @@ export const RegisterEVList = (props: Props) => {
                     // <Text > {gps ? `${gps.latitude}, ${gps.longitude}` : 'No GPS data available'}</Text>
                 )
             },
-
-            {
-                title: <></>,
-                dataIndex: "action",
-                key: "action",
-                width: 120,
-                render: (_: string, row: any) => (
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            className="text-primary underline"
-                            onClick={() => alert(`Edit item #${row.id}`)}
-                        >
-                            Edit
-                        </button>
-                        <button type="button" className="underline">
-                            View
-                        </button>
-                    </div>
-                ),
-            },
+            // {
+            //     title: <></>,
+            //     dataIndex: "action",
+            //     key: "action",
+            //     width: 50,
+            //     render: (_: string, row: any) => (
+            //         <div className="flex items-center gap-2">
+            //             <MdDelete
+            //                 style={{ color: "#d24141", }}
+            //                 size={30}
+            //                 onClick={() => apidelete(row?.code_id, fetchData())}
+            //             >
+            //                 Edit
+            //             </MdDelete>
+            //         </div>
+            //     ),
+            // },
         ];
 
     const columns: any = React.useMemo(
@@ -276,5 +335,12 @@ export const RegisterEVList = (props: Props) => {
         [order, column, onHeaderClick]
     );
 
-    return <Table data={data} columns={columns} className="text-sm h-full" />;
+    return (
+        <div className='w-full'>
+            <div className='w-full flex justify-end my-5'>
+                <Button style={{ backgroundColor: "#2e33a9" }} onClick={() => exportToExcel()}>ດາວໂຫຼດ Excel</Button>
+            </div>
+            <Table data={data} columns={columns} className="text-sm h-full" />
+        </div>
+    );
 }
